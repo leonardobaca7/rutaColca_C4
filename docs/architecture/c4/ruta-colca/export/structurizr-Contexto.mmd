@@ -1,0 +1,29 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["System Context View: RutaColca"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Turista</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Visitante interesado en<br />buscar, reservar y pagar<br />tours hacia el Valle del<br />Colca.</div>"]
+    style 1 fill:#0b3d62,stroke:#072a44,color:#ffffff
+    11["<div style='font-weight: bold'>Pasarela de Pagos</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Servicio externo para<br />procesamiento seguro de pagos<br />con tarjetas bancarias y<br />billeteras móviles.</div>"]
+    style 11 fill:#8c8c8c,stroke:#626262,color:#ffffff
+    12["<div style='font-weight: bold'>Sistema de AUTOCOLCA</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Sistema externo institucional<br />para verificación de validez<br />y vigencia de boletos<br />turísticos.</div>"]
+    style 12 fill:#8c8c8c,stroke:#626262,color:#ffffff
+    13["<div style='font-weight: bold'>WhatsApp Business</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Plataforma externa de<br />mensajería empresarial para<br />entrega automatizada de<br />itinerarios.</div>"]
+    style 13 fill:#8c8c8c,stroke:#626262,color:#ffffff
+    2["<div style='font-weight: bold'>Operador de Agencia</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal de agencia de<br />turismo en Arequipa o Chivay<br />que publica tours, administra<br />cupos y atiende ventanilla.</div>"]
+    style 2 fill:#0b3d62,stroke:#072a44,color:#ffffff
+    3["<div style='font-weight: bold'>Administrador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Auditor interno de la<br />plataforma que aprueba<br />agencias aliadas y supervisa<br />métricas de venta.</div>"]
+    style 3 fill:#0b3d62,stroke:#072a44,color:#ffffff
+    5["<div style='font-weight: bold'>RutaColca</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Plataforma digital para la<br />publicación, validación de<br />boletos turísticos, reserva y<br />pago de tours al Valle del<br />Colca.</div>"]
+    style 5 fill:#1b5e8b,stroke:#124161,color:#ffffff
+
+    1-. "<div>Busca tours, reserva cupos y<br />realiza el pago de servicios<br />en</div><div style='font-size: 70%'>[HTTPS]</div>" .->5
+    2-. "<div>Publica itinerarios, gestiona<br />cupos y registra ventas<br />presenciales en</div><div style='font-size: 70%'>[HTTPS]</div>" .->5
+    3-. "<div>Aprueba agencias registradas<br />y consulta reportes de ventas<br />en</div><div style='font-size: 70%'>[HTTPS]</div>" .->5
+    5-. "<div>Solicita autorización de<br />cargos y cobro de reservas a</div><div style='font-size: 70%'>[HTTPS]</div>" .->11
+    5-. "<div>Valida número y vigencia de<br />boleto turístico en</div><div style='font-size: 70%'>[HTTPS]</div>" .->12
+    5-. "<div>Envía itinerarios y listas de<br />pasajeros a través de</div><div style='font-size: 70%'>[HTTPS]</div>" .->13
+
+  end

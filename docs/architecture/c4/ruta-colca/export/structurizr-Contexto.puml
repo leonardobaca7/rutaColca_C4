@@ -1,0 +1,34 @@
+@startuml
+title <size:24>System Context View: RutaColca</size>\n<size:24>Diagrama de contexto del sistema RutaColca</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+Person(Turista, "Turista", $descr="Visitante interesado en buscar, reservar y pagar tours hacia el Valle del Colca.", $tags="", $link="")
+System(PasareladePagos, "Pasarela de Pagos", $descr="Servicio externo para procesamiento seguro de pagos con tarjetas bancarias y billeteras móviles.", $tags="", $link="")
+System(SistemadeAUTOCOLCA, "Sistema de AUTOCOLCA", $descr="Sistema externo institucional para verificación de validez y vigencia de boletos turísticos.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Plataforma externa de mensajería empresarial para entrega automatizada de itinerarios.", $tags="", $link="")
+Person(OperadordeAgencia, "Operador de Agencia", $descr="Personal de agencia de turismo en Arequipa o Chivay que publica tours, administra cupos y atiende ventanilla.", $tags="", $link="")
+Person(Administrador, "Administrador", $descr="Auditor interno de la plataforma que aprueba agencias aliadas y supervisa métricas de venta.", $tags="", $link="")
+System(RutaColca, "RutaColca", $descr="Plataforma digital para la publicación, validación de boletos turísticos, reserva y pago de tours al Valle del Colca.", $tags="", $link="")
+
+Rel(Turista, RutaColca, "Busca tours, reserva cupos y realiza el pago de servicios en", $techn="HTTPS", $tags="", $link="")
+Rel(OperadordeAgencia, RutaColca, "Publica itinerarios, gestiona cupos y registra ventas presenciales en", $techn="HTTPS", $tags="", $link="")
+Rel(Administrador, RutaColca, "Aprueba agencias registradas y consulta reportes de ventas en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, PasareladePagos, "Solicita autorización de cargos y cobro de reservas a", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, SistemadeAUTOCOLCA, "Valida número y vigencia de boleto turístico en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca, WhatsAppBusiness, "Envía itinerarios y listas de pasajeros a través de", $techn="HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

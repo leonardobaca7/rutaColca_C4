@@ -1,0 +1,47 @@
+@startuml
+title <size:24>Container View: RutaColca</size>\n<size:24>Diagrama de contenedores con soporte offline para agencias en Chivay (HU-05)</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+Person(Turista, "Turista", $descr="Visitante interesado en buscar, reservar y pagar tours hacia el Valle del Colca.", $tags="", $link="")
+Person(OperadordeAgencia, "Operador de Agencia", $descr="Personal de agencia de turismo en Arequipa o Chivay que publica tours, administra cupos y atiende ventanilla.", $tags="", $link="")
+Person(Administrador, "Administrador", $descr="Auditor interno de la plataforma que aprueba agencias aliadas y supervisa métricas de venta.", $tags="", $link="")
+System(PasareladePagos, "Pasarela de Pagos", $descr="Servicio externo para procesamiento seguro de pagos con tarjetas bancarias y billeteras móviles.", $tags="", $link="")
+System(SistemadeAUTOCOLCA, "Sistema de AUTOCOLCA", $descr="Sistema externo institucional para verificación de validez y vigencia de boletos turísticos.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Plataforma externa de mensajería empresarial para entrega automatizada de itinerarios.", $tags="", $link="")
+
+System_Boundary("RutaColca_boundary", "RutaColca", $tags="") {
+  ContainerDb(RutaColca.AlmacénLocaldeReservas, "Almacén Local de Reservas", $techn="IndexedDB", $descr="Almacena temporalmente en el navegador de la tablet las ventas presenciales durante cortes de conectividad en Chivay.", $tags="", $link="")
+  Container(RutaColca.WebdelTurista, "Web del Turista", $techn="React (SPA)", $descr="Permite a los turistas explorar catálogo de tours, seleccionar fechas y pagar reservas en línea.", $tags="", $link="")
+  Container(RutaColca.PortaldeAgencias, "Portal de Agencias", $techn="React (PWA)", $descr="Permite a las agencias publicar tours, administrar cupos y registrar ventas presenciales (online y offline).", $tags="", $link="")
+  Container(RutaColca.APIBackend, "API Backend", $techn="Java 21, Spring Boot", $descr="Provee la lógica de negocio para gestión de tours, validación de boletos turísticos, pagos y notificaciones.", $tags="", $link="")
+  ContainerDb(RutaColca.BasedeDatosPrincipal, "Base de Datos Principal", $techn="PostgreSQL 16", $descr="Almacena información de agencias, guías, tours, cupos, boletos validados y transacciones.", $tags="", $link="")
+}
+
+Rel(Turista, RutaColca.WebdelTurista, "Explora catálogo, solicita reserva y efectúa pagos en", $techn="HTTPS", $tags="", $link="")
+Rel(OperadordeAgencia, RutaColca.PortaldeAgencias, "Publica salidas, administra cupos y gestiona reservas en", $techn="HTTPS", $tags="", $link="")
+Rel(Administrador, RutaColca.PortaldeAgencias, "Audita agencias y supervisa indicadores comerciales en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.WebdelTurista, RutaColca.APIBackend, "Solicita catálogo, envía reservas y procesa pagos en", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.PortaldeAgencias, RutaColca.APIBackend, "Gestiona tours, consulta disponibilidad y sincroniza reservas con", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.PortaldeAgencias, RutaColca.AlmacénLocaldeReservas, "Guarda y recupera reservas presenciales en cola de salida en", $techn="IndexedDB API", $tags="", $link="")
+Rel(RutaColca.AlmacénLocaldeReservas, RutaColca.PortaldeAgencias, "Provee datos de reservas pendientes para sincronización hacia", $techn="IndexedDB API", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.BasedeDatosPrincipal, "Lee y escribe información transaccional persistente en", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.APIBackend, PasareladePagos, "Solicita cobro de transacciones financieras a", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, SistemadeAUTOCOLCA, "Consulta estado y validez de boleto turístico en", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, WhatsAppBusiness, "Dispara envío de itinerarios y listas de grupo mediante", $techn="JSON/HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

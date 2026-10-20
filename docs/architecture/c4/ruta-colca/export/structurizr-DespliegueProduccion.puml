@@ -1,0 +1,66 @@
+@startuml
+title <size:24>Deployment View: RutaColca - Produccion</size>\n<size:24>Diagrama de despliegue en entorno de producción con alta disponibilidad</size>
+
+set separator none
+top to bottom direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Deployment>
+
+Deployment_Node(Produccion.DispositivodelTurista, "Dispositivo del Turista", $type="Android / iOS / Windows / macOS", $descr="Smartphone o computadora personal del visitante", $tags="", $link="") {
+  Deployment_Node(Produccion.DispositivodelTurista.NavegadorWebdelCliente, "Navegador Web del Cliente", $type="Chrome / Safari / Firefox", $descr="Navegador web moderno estándar", $tags="", $link="") {
+    Container(Produccion.DispositivodelTurista.NavegadorWebdelCliente.WebdelTurista_1, "Web del Turista", $techn="React (SPA)", $descr="Permite a los turistas explorar catálogo de tours, seleccionar fechas y pagar reservas en línea.", $tags="", $link="")
+  }
+
+}
+
+Deployment_Node(Produccion.TerminaldeAgenciaChivayArequipa, "Terminal de Agencia (Chivay / Arequipa)", $type="Android Tablet / Windows PC", $descr="Tablet o PC en counter de venta de la agencia", $tags="", $link="") {
+  Deployment_Node(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia, "Runtime PWA de Agencia", $type="Chromium Runtime / PWA", $descr="Navegador compatible con Service Workers y almacenamiento offline", $tags="", $link="") {
+    Container(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.PortaldeAgencias_1, "Portal de Agencias", $techn="React (PWA)", $descr="Permite a las agencias publicar tours, administrar cupos y registrar ventas presenciales (online y offline).", $tags="", $link="")
+    ContainerDb(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.AlmacénLocaldeReservas_1, "Almacén Local de Reservas", $techn="IndexedDB", $descr="Almacena temporalmente en el navegador de la tablet las ventas presenciales durante cortes de conectividad en Chivay.", $tags="", $link="")
+  }
+
+}
+
+Deployment_Node(Produccion.ProveedorCloud, "Proveedor Cloud", $type="AWS / GCP / Cloud Datacenter (Región Sudamérica)", $descr="Infraestructura de nube de alta disponibilidad", $tags="", $link="") {
+  Deployment_Node(Produccion.ProveedorCloud.BalanceadordeCarga, "Balanceador de Carga", $type="AWS ALB / Nginx", $descr="Termina conexiones TLS/HTTPS y distribuye las peticiones entre los nodos de backend", $tags="", $link="")
+  Deployment_Node(Produccion.ProveedorCloud.GrupodeCómputoAPI, "Grupo de Cómputo API", $type="Cluster Linux", $descr="Instancias virtuales para absorción de demanda y picos en temporada alta", $tags="", $link="") {
+    Deployment_Node(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1, "VM Ubuntu 24.04 (Instancia 1)", $type="Ubuntu Server / Docker", $descr="Máquina virtual de producción", $tags="", $link="") {
+      Container(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1.APIBackend_1, "API Backend", $techn="Java 21, Spring Boot", $descr="Provee la lógica de negocio para gestión de tours, validación de boletos turísticos, pagos y notificaciones.", $tags="", $link="")
+    }
+
+    Deployment_Node(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2, "VM Ubuntu 24.04 (Instancia 2)", $type="Ubuntu Server / Docker", $descr="Máquina virtual de producción para alta disponibilidad", $tags="", $link="") {
+      Container(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2.APIBackend_1, "API Backend", $techn="Java 21, Spring Boot", $descr="Provee la lógica de negocio para gestión de tours, validación de boletos turísticos, pagos y notificaciones.", $tags="", $link="")
+    }
+
+  }
+
+  Deployment_Node(Produccion.ProveedorCloud.ServicioGestionadodeBasedeDatos, "Servicio Gestionado de Base de Datos", $type="AWS RDS PostgreSQL / Cloud SQL", $descr="Instancia relacional administrada de alta confiabilidad", $tags="", $link="") {
+    ContainerDb(Produccion.ProveedorCloud.ServicioGestionadodeBasedeDatos.BasedeDatosPrincipal_1, "Base de Datos Principal", $techn="PostgreSQL 16", $descr="Almacena información de agencias, guías, tours, cupos, boletos validados y transacciones.", $tags="", $link="")
+  }
+
+}
+
+Rel(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.AlmacénLocaldeReservas_1, Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.PortaldeAgencias_1, "Provee datos de reservas pendientes para sincronización hacia", $techn="IndexedDB API", $tags="", $link="")
+Rel(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.PortaldeAgencias_1, Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.AlmacénLocaldeReservas_1, "Guarda y recupera reservas presenciales en cola de salida en", $techn="IndexedDB API", $tags="", $link="")
+Rel(Produccion.DispositivodelTurista.NavegadorWebdelCliente.WebdelTurista_1, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1.APIBackend_1, "Solicita catálogo, envía reservas y procesa pagos en", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.PortaldeAgencias_1, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1.APIBackend_1, "Gestiona tours, consulta disponibilidad y sincroniza reservas con", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.DispositivodelTurista.NavegadorWebdelCliente.WebdelTurista_1, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2.APIBackend_1, "Solicita catálogo, envía reservas y procesa pagos en", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.TerminaldeAgenciaChivayArequipa.RuntimePWAdeAgencia.PortaldeAgencias_1, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2.APIBackend_1, "Gestiona tours, consulta disponibilidad y sincroniza reservas con", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1.APIBackend_1, Produccion.ProveedorCloud.ServicioGestionadodeBasedeDatos.BasedeDatosPrincipal_1, "Lee y escribe información transaccional persistente en", $techn="JDBC", $tags="", $link="")
+Rel(Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2.APIBackend_1, Produccion.ProveedorCloud.ServicioGestionadodeBasedeDatos.BasedeDatosPrincipal_1, "Lee y escribe información transaccional persistente en", $techn="JDBC", $tags="", $link="")
+Rel(Produccion.ProveedorCloud.BalanceadordeCarga, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia1.APIBackend_1, "Distribuye peticiones balanceadas a", $techn="HTTP/8080", $tags="", $link="")
+Rel(Produccion.ProveedorCloud.BalanceadordeCarga, Produccion.ProveedorCloud.GrupodeCómputoAPI.VMUbuntu2404Instancia2.APIBackend_1, "Distribuye peticiones balanceadas a", $techn="HTTP/8080", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

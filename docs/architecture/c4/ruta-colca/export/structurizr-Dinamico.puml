@@ -1,0 +1,41 @@
+@startuml
+title <size:24>Dynamic View: RutaColca</size>\n<size:24>Flujo dinámico: Reservar y pagar un tour (HU-02 y HU-03)</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+System_Boundary("RutaColca_boundary", "RutaColca", $tags="") {
+  Container(RutaColca.WebdelTurista, "Web del Turista", $techn="React (SPA)", $descr="Permite a los turistas explorar catálogo de tours, seleccionar fechas y pagar reservas en línea.", $tags="", $link="")
+  Container(RutaColca.APIBackend, "API Backend", $techn="Java 21, Spring Boot", $descr="Provee la lógica de negocio para gestión de tours, validación de boletos turísticos, pagos y notificaciones.", $tags="", $link="")
+  ContainerDb(RutaColca.BasedeDatosPrincipal, "Base de Datos Principal", $techn="PostgreSQL 16", $descr="Almacena información de agencias, guías, tours, cupos, boletos validados y transacciones.", $tags="", $link="")
+}
+
+Person(Turista, "Turista", $descr="Visitante interesado en buscar, reservar y pagar tours hacia el Valle del Colca.", $tags="", $link="")
+Person(GuíadeTurismo, "Guía de Turismo", $descr="Profesional de campo que recibe itinerarios y listas de pasajeros para liderar los recorridos turísticos.", $tags="", $link="")
+System(PasareladePagos, "Pasarela de Pagos", $descr="Servicio externo para procesamiento seguro de pagos con tarjetas bancarias y billeteras móviles.", $tags="", $link="")
+System(SistemadeAUTOCOLCA, "Sistema de AUTOCOLCA", $descr="Sistema externo institucional para verificación de validez y vigencia de boletos turísticos.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Plataforma externa de mensajería empresarial para entrega automatizada de itinerarios.", $tags="", $link="")
+
+Rel(Turista, RutaColca.WebdelTurista, "1: 1. Selecciona tour, ingresa datos de pasajeros y código de boleto turístico", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.WebdelTurista, RutaColca.APIBackend, "2: 2. Envía solicitud de reserva con boleto y datos de pago (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, SistemadeAUTOCOLCA, "3: 3. Valida vigencia y autenticidad del boleto turístico (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, PasareladePagos, "4: 4. Solicita cargo y confirmación del pago del tour (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.BasedeDatosPrincipal, "5: 5. Registra la reserva confirmada con estado PAGADO (JDBC)", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.APIBackend, WhatsAppBusiness, "6: 6. Solicita envío de itinerario y lista del grupo (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(WhatsAppBusiness, GuíadeTurismo, "7: 7. Entrega mensaje con itinerario y lista de pasajeros (WhatsApp Protocol)", $techn="WhatsApp Protocol", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.WebdelTurista, "8: 8. Retorna confirmación de reserva exitosa con voucher digital (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml
