@@ -1,0 +1,74 @@
+@startuml patron-notificaciones-observer
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Patrón Observer: Notificaciones Concurrentes ante Confirmación de Reserva (Escenario 3)
+
+package "Cliente / Disparador" {
+    class ConfirmacionReservaService <<Cliente>> {
+        - publicador: PublicadorReservas
+        + confirmarReserva(idReserva: String): void
+    }
+}
+
+package "Sujeto / Publicador" {
+    class PublicadorReservas <<Sujeto>> {
+        - observadores: List<ObservadorReserva>
+        + suscribir(observador: ObservadorReserva): void
+        + desuscribir(observador: ObservadorReserva): void
+        + notificarTodos(evento: EventoReservaConfirmada): void
+    }
+
+    class EventoReservaConfirmada <<Evento>> {
+        - idReserva: String
+        - emailTurista: String
+        - telefonoGuia: String
+        - codigoTour: String
+        - cuposReservados: int
+        + getIdReserva(): String
+        + getEmailTurista(): String
+        + getTelefonoGuia(): String
+    }
+}
+
+package "Observadores (Suscriptores Desacoplados)" {
+    interface ObservadorReserva <<Observador>> {
+        + onReservaConfirmada(evento: EventoReservaConfirmada): void
+    }
+
+    class NotificadorTuristaEmail <<Observador Concreto>> {
+        - mailSender: JavaMailSender
+        + onReservaConfirmada(evento: EventoReservaConfirmada): void
+    }
+
+    class NotificadorGuiaWhatsApp <<Observador Concreto>> {
+        - whatsAppClient: WhatsAppBusinessClient
+        + onReservaConfirmada(evento: EventoReservaConfirmada): void
+    }
+
+    class ActualizadorCuposAgencia <<Observador Concreto>> {
+        - webSocketTemplate: SimpMessagingTemplate
+        + onReservaConfirmada(evento: EventoReservaConfirmada): void
+    }
+}
+
+' Relaciones
+ConfirmacionReservaService --> PublicadorReservas : "dispara evento en"
+PublicadorReservas o--> "0..*" ObservadorReserva : "mantiene y notifica"
+PublicadorReservas ..> EventoReservaConfirmada : "emite"
+
+NotificadorTuristaEmail ..|> ObservadorReserva : "implementa"
+NotificadorGuiaWhatsApp ..|> ObservadorReserva : "implementa"
+ActualizadorCuposAgencia ..|> ObservadorReserva : "implementa"
+
+ObservadorReserva ..> EventoReservaConfirmada : "recibe"
+
+note bottom of PublicadorReservas
+  <b>Bajo Acoplamiento:</b>
+  Confirmar una reserva no acopla el servicio
+  al envío de WhatsApp ni al correo.
+end note
+
+@enduml

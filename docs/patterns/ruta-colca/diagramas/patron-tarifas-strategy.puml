@@ -1,0 +1,82 @@
+@startuml patron-tarifas-strategy
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Patrón Strategy: Tarifas y Precios Dinámicos (Escenario 2)
+
+package "Cliente" {
+    class CotizadorService <<Cliente>> {
+        + cotizarReserva(tour: Tour, pasajeros: List<Pasajero>, esTemporadaAlta: boolean): BigDecimal
+    }
+}
+
+package "Contexto de Dominio" {
+    class Reserva <<Contexto>> {
+        - id: String
+        - tour: Tour
+        - pasajeros: List<Pasajero>
+        - estrategiaPrecio: EstrategiaPrecio
+        + setEstrategiaPrecio(estrategia: EstrategiaPrecio): void
+        + calcularMontoTotal(): BigDecimal
+    }
+
+    class Tour {
+        - id: String
+        - nombre: String
+        - precioBase: BigDecimal
+        + getPrecioBase(): BigDecimal
+    }
+
+    class Pasajero {
+        - dni: String
+        - esEstudiante: boolean
+        + isEstudiante(): boolean
+    }
+}
+
+package "Estrategias de Precios (Familia de Algoritmos)" {
+    interface EstrategiaPrecio <<Estrategia>> {
+        + calcular(precioBase: BigDecimal, cantidadPasajeros: int): BigDecimal
+    }
+
+    class PrecioEstandarStrategy <<Estrategia Concreta>> {
+        + calcular(precioBase: BigDecimal, cantidadPasajeros: int): BigDecimal
+    }
+
+    class PrecioTemporadaAltaStrategy <<Estrategia Concreta>> {
+        - {static} RECARGO_TEMPORADA: BigDecimal = 0.25
+        + calcular(precioBase: BigDecimal, cantidadPasajeros: int): BigDecimal
+    }
+
+    class PrecioGrupoStrategy <<Estrategia Concreta>> {
+        - {static} DESCUENTO_GRUPO: BigDecimal = 0.15
+        - {static} MINIMO_PASAJEROS: int = 5
+        + calcular(precioBase: BigDecimal, cantidadPasajeros: int): BigDecimal
+    }
+
+    class PrecioEstudianteStrategy <<Estrategia Concreta>> {
+        - {static} DESCUENTO_ESTUDIANTE: BigDecimal = 0.30
+        + calcular(precioBase: BigDecimal, cantidadPasajeros: int): BigDecimal
+    }
+}
+
+' Relaciones
+CotizadorService --> Reserva : "configura estrategia en"
+Reserva o--> EstrategiaPrecio : "delega cálculo a"
+Reserva *-- Tour : "contiene"
+Reserva *-- Pasajero : "contiene"
+
+PrecioEstandarStrategy ..|> EstrategiaPrecio : "implementa"
+PrecioTemporadaAltaStrategy ..|> EstrategiaPrecio : "implementa"
+PrecioGrupoStrategy ..|> EstrategiaPrecio : "implementa"
+PrecioEstudianteStrategy ..|> EstrategiaPrecio : "implementa"
+
+note right of EstrategiaPrecio
+  <b>Encapsular lo que varía:</b>
+  Cada regla de precio es una clase aislada.
+  El contexto cambia de estrategia en ejecución.
+end note
+
+@enduml

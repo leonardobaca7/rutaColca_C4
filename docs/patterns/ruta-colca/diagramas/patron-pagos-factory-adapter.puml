@@ -1,0 +1,92 @@
+@startuml patron-pagos-factory-adapter
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Patrón Factory Method + Adapter: Procesamiento Multipasarela (Escenario 1)
+
+package "Capa de Aplicación (Cliente)" {
+    class ReservaService <<Cliente>> {
+        - pasarelaFactory: PasarelaPagoFactory
+        + procesarPagoReserva(reserva: Reserva, metodo: MetodoPago, cuenta: String): ResultadoPago
+    }
+
+    enum MetodoPago {
+        TARJETA
+        YAPE
+        PAYPAL
+    }
+}
+
+package "Capa de Dominio / Abstracción" {
+    interface PasarelaPago <<interface>> {
+        + cobrar(monto: BigDecimal, cuentaOrigen: String): ResultadoPago
+    }
+
+    class ResultadoPago {
+        - exitoso: boolean
+        - idTransaccion: String
+        - mensaje: String
+        + isExitoso(): boolean
+        + getIdTransaccion(): String
+    }
+
+    class PasarelaPagoFactory <<Fábrica>> {
+        + {static} crear(metodo: MetodoPago): PasarelaPago
+    }
+}
+
+package "Capa de Infraestructura (Adaptadores Concretos)" {
+    class TarjetaAdapter <<Adaptador>> {
+        - niubizClient: NiubizClient
+        + cobrar(monto: BigDecimal, cuentaOrigen: String): ResultadoPago
+    }
+
+    class YapeAdapter <<Adaptador>> {
+        - yapeClient: YapeClient
+        + cobrar(monto: BigDecimal, cuentaOrigen: String): ResultadoPago
+    }
+
+    class PayPalAdapter <<Adaptador>> {
+        - payPalHttpClient: PayPalHttpClient
+        + cobrar(monto: BigDecimal, cuentaOrigen: String): ResultadoPago
+    }
+}
+
+package "SDKs y APIs Externas (Sistemas Adaptados)" {
+    class NiubizClient <<SDK Externo>> {
+        + chargeCreditCard(tokenCard: String, amountCents: long): String
+    }
+
+    class YapeClient <<SDK Externo>> {
+        + executePushPayment(cellphone: String, amountCents: long): String
+    }
+
+    class PayPalHttpClient <<API REST Externa>> {
+        + postPaymentOrder(captureAmountUsd: double): String
+    }
+}
+
+' Relaciones
+ReservaService ..> PasarelaPagoFactory : "pide pasarela a"
+ReservaService ..> PasarelaPago : "cobra mediante"
+PasarelaPagoFactory ..> PasarelaPago : "crea instancias de"
+
+TarjetaAdapter ..|> PasarelaPago : "implementa"
+YapeAdapter ..|> PasarelaPago : "implementa"
+PayPalAdapter ..|> PasarelaPago : "implementa"
+
+TarjetaAdapter --> NiubizClient : "traduce llamadas a"
+YapeAdapter --> YapeClient : "traduce llamadas a"
+PayPalAdapter --> PayPalHttpClient : "traduce llamadas a"
+
+PasarelaPago ..> ResultadoPago : "retorna"
+
+note right of PasarelaPagoFactory
+  <b>Principio OCP:</b>
+  Para añadir Plin, solo creamos
+  PlinAdapter sin modificar ReservaService.
+end note
+
+@enduml

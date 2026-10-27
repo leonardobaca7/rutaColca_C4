@@ -1,0 +1,56 @@
+@startuml patron-autocolca-adapter
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Patrón Adapter: Integración con la API Legada de AUTOCOLCA (Escenario 4)
+
+package "Capa de Aplicación (Cliente)" {
+    class ValidacionBoletoService <<Cliente>> {
+        - validador: ValidadorBoleto
+        + validarBoletoTurista(codigoBoleto: String, dni: String): boolean
+    }
+}
+
+package "Dominio de RutaColca (Interfaz Objetivo)" {
+    interface ValidadorBoleto <<interface>> {
+        + validar(codigoBoleto: String, dni: String): ResultadoValidacion
+    }
+
+    class ResultadoValidacion {
+        - esValido: boolean
+        - fechaExpiracion: LocalDate
+        - mensaje: String
+        + isValido(): boolean
+        + getFechaExpiracion(): LocalDate
+    }
+}
+
+package "Capa de Infraestructura (Adaptador)" {
+    class AutocolcaApiAdapter <<Adaptador>> {
+        - legacyClient: AutocolcaLegacyClient
+        + validar(codigoBoleto: String, dni: String): ResultadoValidacion
+    }
+}
+
+package "Sistema Externo (AUTOCOLCA - Servicio Adaptado)" {
+    class AutocolcaLegacyClient <<Servicio Legado Externo>> {
+        + consultarVigenciaBoletoServicioPublico(serieNumero: String, hashControl: String): String
+    }
+}
+
+' Relaciones
+ValidacionBoletoService --> ValidadorBoleto : "consume contrato limpio"
+AutocolcaApiAdapter ..|> ValidadorBoleto : "implementa"
+AutocolcaApiAdapter --> AutocolcaLegacyClient : "envuelve y traduce hacia"
+
+ValidadorBoleto ..> ResultadoValidacion : "retorna"
+
+note right of AutocolcaApiAdapter
+  <b>Capa Anticorrupción (ACL):</b>
+  Convierte formatos SOAP/strings legados
+  al modelo inmutable de dominio de RutaColca.
+end note
+
+@enduml
