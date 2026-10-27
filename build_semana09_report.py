@@ -49,6 +49,7 @@ def generate_report():
     COLOR_SECONDARY = RGBColor(27, 94, 139)   # #1B5E8B
     COLOR_TEXT = RGBColor(20, 20, 20)
     COLOR_MUTED = RGBColor(80, 80, 80)
+    COLOR_LINK = RGBColor(18, 90, 160)
 
     def add_p(text, bold_prefix=None, space_after=6, italic=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY):
         p = doc.add_paragraph()
@@ -127,7 +128,7 @@ def generate_report():
         rq.font.color.rgb = COLOR_TEXT
         doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
-    def add_figure(img_path, caption, width_in=5.6):
+    def add_figure(img_path, caption, puml_path, github_url, width_in=5.6):
         if os.path.exists(img_path):
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -138,12 +139,27 @@ def generate_report():
             
             cp = doc.add_paragraph()
             cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            cp.paragraph_format.space_after = Pt(12)
-            c_run = cp.add_run(caption)
+            cp.paragraph_format.space_after = Pt(2)
+            c_run = cp.add_run(caption + "\n")
             c_run.font.name = FONT_FAMILY
             c_run.font.size = Pt(10)
-            c_run.font.italic = True
-            c_run.font.color.rgb = COLOR_MUTED
+            c_run.font.bold = True
+            c_run.font.color.rgb = COLOR_TEXT
+
+            lp = doc.add_paragraph()
+            lp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            lp.paragraph_format.space_after = Pt(12)
+            l1 = lp.add_run(f"• Archivo fuente PlantUML: {puml_path}\n• Imagen renderizada: {img_path}\n• Enlace remoto: ")
+            l1.font.name = FONT_FAMILY
+            l1.font.size = Pt(9)
+            l1.font.italic = True
+            l1.font.color.rgb = COLOR_MUTED
+            
+            l2 = lp.add_run(github_url)
+            l2.font.name = FONT_FAMILY
+            l2.font.size = Pt(9)
+            l2.font.italic = True
+            l2.font.color.rgb = COLOR_LINK
 
     # ==========================================
     # CARÁTULA OFICIAL
@@ -290,8 +306,8 @@ def generate_report():
         "El documento da respuesta rigurosa a los cinco criterios de la rúbrica oficial docente (20/20 puntos): "
         "(1) Identificación clara del problema de diseño en los 5 escenarios; (2) Elección fundamentada de los patrones con "
         "principios de diseño (Abierto/Cerrado, Inversión de Dependencias, Composición sobre Herencia, Encapsular lo que varía); "
-        "(3) Modelado de diagramas de clases PlantUML con roles explícitos (Cliente, Interfaz/Objetivo, Clases Concretas); "
-        "(4) Auditoría y uso crítico de asistentes de Inteligencia Artificial mediante bitácora de contrastación; y "
+        "(3) Modelado de diagramas de clases PlantUML con roles explícitos (Cliente, Interfaz/Objetivo, Clases Concretas), indicando "
+        "la ubicación física de cada diagrama en el repositorio; (4) Auditoría y uso crítico de asistentes de Inteligencia Artificial mediante bitácora de contrastación; y "
         "(5) Resolución formal del reto de la «paternite» demostrando por qué en el escenario de consultas masivas de disponibilidad "
         "un índice relacional B-Tree en PostgreSQL 16 y caché HTTP en el balanceador son técnica y económicamente superiores a forzar "
         "un patrón Proxy artesanal en memoria. Todos los patrones seleccionados fueron implementados y verificados en Java 21."
@@ -496,13 +512,57 @@ def generate_report():
     add_heading_1("5. Modelado de Diagramas de Clases PlantUML (Criterio 3)")
     add_p(
         "Conforme al Paso 2 de la actividad, se modelaron los diagramas de clases identificando explícitamente los roles exigidos por la "
-        "rúbrica: Cliente, Interfaz/Objetivo y Clases Concretas."
+        "rúbrica: Cliente, Interfaz/Objetivo y Clases Concretas. A continuación se presentan las direcciones relativas y remotas donde "
+        "se encuentran alojados todos los diagramas dentro del repositorio del proyecto:"
     )
+
+    # Índice de direcciones de diagramas
+    dir_table = doc.add_table(rows=5, cols=4)
+    dir_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    d_headers = ["Figura", "Patrón GoF", "Ruta de Archivo Fuente (.puml)", "Ruta de Imagen (.png)"]
+    for j, h in enumerate(d_headers):
+        cell = dir_table.cell(0, j)
+        set_cell_background(cell, "0B3D62")
+        set_cell_margins(cell, 70, 70, 80, 80)
+        p = cell.paragraphs[0]
+        p.paragraph_format.space_after = Pt(2)
+        r = p.add_run(h)
+        r.font.name = FONT_FAMILY
+        r.font.size = Pt(9.5)
+        r.font.bold = True
+        r.font.color.rgb = RGBColor(255, 255, 255)
+
+    d_data = [
+        ("Figura 1", "Factory Method + Adapter", "docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.puml", "docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png"),
+        ("Figura 2", "Strategy", "docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.puml", "docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png"),
+        ("Figura 3", "Observer", "docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.puml", "docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png"),
+        ("Figura 4", "Adapter", "docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.puml", "docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png")
+    ]
+    for row_idx, data_row in enumerate(d_data, start=1):
+        bg = "FFFFFF" if row_idx % 2 == 1 else "F9FAFC"
+        for col_idx, text_val in enumerate(data_row):
+            cell = dir_table.cell(row_idx, col_idx)
+            set_cell_background(cell, bg)
+            set_cell_margins(cell, 50, 50, 60, 60)
+            p = cell.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            r = p.add_run(text_val)
+            r.font.name = FONT_FAMILY
+            r.font.size = Pt(8.5)
+            if col_idx == 0:
+                r.font.bold = True
+            elif col_idx >= 2:
+                r.font.color.rgb = COLOR_SECONDARY
+            r.font.color.rgb = COLOR_TEXT
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(8)
 
     add_heading_2("5.1. Escenario 1 · Diagrama de Clases: Factory Method + Adapter (Pagos)")
     add_figure(
         "docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png",
         "Figura 1. Diagrama de Clases: Factory Method y Adaptadores para pasarelas de pago (Tarjeta, Yape, PayPal).",
+        puml_path="docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.puml",
+        github_url="https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png",
         width_in=5.6
     )
 
@@ -510,6 +570,8 @@ def generate_report():
     add_figure(
         "docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png",
         "Figura 2. Diagrama de Clases: Patrón Strategy para el cálculo de tarifas dinámicas en RutaColca.",
+        puml_path="docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.puml",
+        github_url="https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png",
         width_in=5.6
     )
 
@@ -517,6 +579,8 @@ def generate_report():
     add_figure(
         "docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png",
         "Figura 3. Diagrama de Clases: Patrón Observer para la notificación concurrente y desacoplada a múltiples interesados.",
+        puml_path="docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.puml",
+        github_url="https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png",
         width_in=5.6
     )
 
@@ -524,6 +588,8 @@ def generate_report():
     add_figure(
         "docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png",
         "Figura 4. Diagrama de Clases: Patrón Adapter como Capa Anticorrupción frente al servicio externo de AUTOCOLCA.",
+        puml_path="docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.puml",
+        github_url="https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png",
         width_in=5.4
     )
 
@@ -582,7 +648,8 @@ def generate_report():
     add_heading_1("7. Implementación de Referencia y Verificación en Java 21")
     add_p(
         "El código correspondiente a los 4 patrones seleccionados fue implementado en Java 21 en el paquete `com.rutacolca.patterns`. "
-        "La clase `DemoRutaColcaPatrones.java` integra y ejecuta la suite completa sin requerir dependencias externas. A continuación "
+        "Las clases se encuentran organizadas en la carpeta `docs/patterns/ruta-colca/src/` del repositorio. La clase "
+        "`DemoRutaColcaPatrones.java` integra y ejecuta la suite completa sin requerir dependencias externas. A continuación "
         "se presenta la captura de la salida por consola obtenida al compilar y ejecutar con JDK 22:"
     )
     add_callout(
@@ -644,7 +711,7 @@ def generate_report():
 
     output_docx = "docs/INFORME_SEMANA09_PATRONES_RUTACOLCA.docx"
     doc.save(output_docx)
-    print(f"Semana 09 Report saved successfully: {output_docx}")
+    print(f"Semana 09 Report with diagram paths saved successfully: {output_docx}")
 
 if __name__ == "__main__":
     generate_report()

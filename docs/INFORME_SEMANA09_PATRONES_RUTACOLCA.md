@@ -111,18 +111,51 @@ El equipo dictamina que el **ESCENARIO 5 (Consultas masivas de disponibilidad de
 
 ## 5. Modelado de Diagramas de Clases PlantUML (Criterio 3)
 
-Se modelaron los diagramas de clases identificando explícitamente los roles exigidos por la rúbrica: **Cliente**, **Interfaz/Objetivo** y **Clases Concretas**.
+Se modelaron los diagramas de clases identificando explícitamente los roles exigidos por la rúbrica: **Cliente**, **Interfaz/Objetivo** y **Clases Concretas**. A continuación se detallan las direcciones físicas y remotas en donde se encuentra alojado cada diagrama dentro del repositorio:
+
+### Índice de Ubicación de Diagramas en el Repositorio
+
+| Figura | Patrón GoF | Archivo Fuente PlantUML (`.puml`) | Imagen Renderizada (`.png`) | Enlace Directo en GitHub |
+| :---: | :--- | :--- | :--- | :--- |
+| **Figura 1** | Factory Method + Adapter | [`docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.puml`](patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.puml) | [`docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png`](patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png) | [Ver en GitHub](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png) |
+| **Figura 2** | Strategy | [`docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.puml`](patterns/ruta-colca/diagramas/patron-tarifas-strategy.puml) | [`docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png`](patterns/ruta-colca/diagramas/patron-tarifas-strategy.png) | [Ver en GitHub](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png) |
+| **Figura 3** | Observer | [`docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.puml`](patterns/ruta-colca/diagramas/patron-notificaciones-observer.puml) | [`docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png`](patterns/ruta-colca/diagramas/patron-notificaciones-observer.png) | [Ver en GitHub](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png) |
+| **Figura 4** | Adapter | [`docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.puml`](patterns/ruta-colca/diagramas/patron-autocolca-adapter.puml) | [`docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png`](patterns/ruta-colca/diagramas/patron-autocolca-adapter.png) | [Ver en GitHub](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png) |
+
+---
 
 ### 5.1. Escenario 1 · Diagrama de Clases: Factory Method + Adapter (Pagos)
+* **Archivo fuente PlantUML:** `docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.puml`
+* **Imagen renderizada:** `docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png`
+* **Enlace remoto:** [https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png)
+
 ![Figura 1. Patrón Pagos Factory y Adapter](patterns/ruta-colca/diagramas/patron-pagos-factory-adapter.png)
 
+---
+
 ### 5.2. Escenario 2 · Diagrama de Clases: Strategy (Tarifas Dinámicas)
+* **Archivo fuente PlantUML:** `docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.puml`
+* **Imagen renderizada:** `docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png`
+* **Enlace remoto:** [https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-tarifas-strategy.png)
+
 ![Figura 2. Patrón Tarifas Strategy](patterns/ruta-colca/diagramas/patron-tarifas-strategy.png)
 
+---
+
 ### 5.3. Escenario 3 · Diagrama de Clases: Observer (Notificaciones Concurrentes)
+* **Archivo fuente PlantUML:** `docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.puml`
+* **Imagen renderizada:** `docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png`
+* **Enlace remoto:** [https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-notificaciones-observer.png)
+
 ![Figura 3. Patrón Notificaciones Observer](patterns/ruta-colca/diagramas/patron-notificaciones-observer.png)
 
+---
+
 ### 5.4. Escenario 4 · Diagrama de Clases: Adapter (Integración AUTOCOLCA)
+* **Archivo fuente PlantUML:** `docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.puml`
+* **Imagen renderizada:** `docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png`
+* **Enlace remoto:** [https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png](https://github.com/leonardobaca7/rutaColca_C4/blob/main/docs/patterns/ruta-colca/diagramas/patron-autocolca-adapter.png)
+
 ![Figura 4. Patrón AUTOCOLCA Adapter](patterns/ruta-colca/diagramas/patron-autocolca-adapter.png)
 
 ---
