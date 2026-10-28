@@ -12,13 +12,13 @@ workspace "RutaColca" "Modelo C4 de la plataforma de tours RutaColca - EPIS UNSA
         guia = person "Guía de Turismo" "Profesional de campo que recibe itinerarios y listas de pasajeros para liderar los recorridos turísticos."
 
         // ==========================================
-        // PASO 2 y 3 · Sistema en estudio y Contenedores (ADR-001 y Reto HU-05)
+        // PASO 2 y 3 · Sistema en estudio y Contenedores (ADR-001, ADR-002 y ADR-003)
         // ==========================================
         ruta = softwareSystem "RutaColca" "Plataforma digital para la publicación, validación de boletos turísticos, reserva y pago de tours al Valle del Colca." {
             webTurista = container "Web del Turista" "Permite a los turistas explorar catálogo de tours, seleccionar fechas y pagar reservas en línea." "React (SPA)"
             portalAgencias = container "Portal de Agencias" "Permite a las agencias publicar tours, administrar cupos y registrar ventas presenciales (online y offline)." "React (PWA)"
-            apiBackend = container "API Backend" "Provee la lógica de negocio para gestión de tours, validación de boletos turísticos, pagos y notificaciones." "Java 21, Spring Boot"
-            baseDatos = container "Base de Datos Principal" "Almacena información de agencias, guías, tours, cupos, boletos validados y transacciones." "PostgreSQL 16" "Database"
+            apiBackend = container "API Backend" "Provee la lógica de negocio para tours, validación de boletos turísticos, orquestación de pagos resilientes con Outbox y notificaciones." "Java 21, Spring Boot"
+            baseDatos = container "Base de Datos Principal" "Almacena información de agencias, guías, tours, cupos, boletos validados, transacciones y cola de pagos outbox." "PostgreSQL 16" "Database"
             almacenLocal = container "Almacén Local de Reservas" "Almacena temporalmente en el navegador de la tablet las ventas presenciales durante cortes de conectividad en Chivay." "IndexedDB" "Database"
         }
 
@@ -39,6 +39,7 @@ workspace "RutaColca" "Modelo C4 de la plataforma de tours RutaColca - EPIS UNSA
         ruta -> autocolca "Valida número y vigencia de boleto turístico en" "HTTPS"
         ruta -> whatsApp "Envía itinerarios y listas de pasajeros a través de" "HTTPS"
         whatsApp -> guia "Entrega notificaciones con itinerarios y lista del grupo a" "WhatsApp Protocol"
+        whatsApp -> turista "Entrega confirmaciones de reserva y vouchers confirmados a" "WhatsApp Protocol"
 
         // ==========================================
         // Relaciones de Contenedores (Nivel 2)
@@ -52,7 +53,7 @@ workspace "RutaColca" "Modelo C4 de la plataforma de tours RutaColca - EPIS UNSA
         ruta.portalAgencias -> ruta.almacenLocal "Guarda y recupera reservas presenciales en cola de salida en" "IndexedDB API"
         ruta.almacenLocal -> ruta.portalAgencias "Provee datos de reservas pendientes para sincronización hacia" "IndexedDB API"
 
-        ruta.apiBackend -> ruta.baseDatos "Lee y escribe información transaccional persistente en" "JDBC"
+        ruta.apiBackend -> ruta.baseDatos "Lee y escribe información transaccional persistente y cola outbox en" "JDBC"
         ruta.apiBackend -> pasarelaPagos "Solicita cobro de transacciones financieras a" "JSON/HTTPS"
         ruta.apiBackend -> autocolca "Consulta estado y validez de boleto turístico en" "JSON/HTTPS"
         ruta.apiBackend -> whatsApp "Dispara envío de itinerarios y listas de grupo mediante" "JSON/HTTPS"
@@ -133,6 +134,22 @@ workspace "RutaColca" "Modelo C4 de la plataforma de tours RutaColca - EPIS UNSA
         deployment ruta "Produccion" "DespliegueProduccion" "Diagrama de despliegue en entorno de producción con alta disponibilidad" {
             include *
             autolayout tb
+        }
+
+        // Vista 6: Diagrama Dinámico - Resiliencia de Pagos en Temporada Alta (Escenario E2 / ADR-003)
+        dynamic ruta "DinamicoPagosResiliente" "Flujo dinámico resiliente: Caída de pasarela de pagos por 15 min y reconciliación diferida (Escenario E2 / ADR-003)" {
+            turista -> ruta.webTurista "1. Envía solicitud de reserva con boleto y datos de pago"
+            ruta.webTurista -> ruta.apiBackend "2. Despacha intento de reserva y cobro (JSON/HTTPS)"
+            ruta.apiBackend -> pasarelaPagos "3. Intenta cobro síncrono; pasarela no responde (Timeout 3s / HTTP 504)"
+            ruta.apiBackend -> ruta.baseDatos "4. Registra atómicamente la reserva y la orden en la tabla pagos_outbox (Estado: PENDIENTE_PAGO)"
+            ruta.apiBackend -> ruta.webTurista "5. Retorna confirmación de reserva diferida con ticket de seguimiento temporal (JSON/HTTPS)"
+            ruta.webTurista -> turista "6. Informa que su reserva está asegurada y su pago en proceso de verificación"
+            ruta.apiBackend -> ruta.baseDatos "7. Worker Outbox sondea pagos diferidos con SELECT ... FOR UPDATE SKIP LOCKED"
+            ruta.apiBackend -> pasarelaPagos "8. Pasarela se restablece; Worker reintenta y confirma cobro exitoso con Idempotency-Key"
+            ruta.apiBackend -> ruta.baseDatos "9. Actualiza reserva a CONFIRMADA_PAGADA y marca outbox como PROCESADO"
+            ruta.apiBackend -> whatsApp "10. Solicita envío de voucher confirmado e itinerario oficial"
+            whatsApp -> turista "11. Notifica voucher de pago confirmado y código QR del boleto turístico al WhatsApp del turista"
+            autolayout lr
         }
 
         // Estilos visuales institucionales
