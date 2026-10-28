@@ -1,0 +1,42 @@
+@startuml
+title <size:24>Dynamic View: RutaColca</size>\n<size:24>Flujo dinámico resiliente: Caída de pasarela de pagos por 15 min y reconciliación diferida (Escenario E2 / ADR-003)</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+System_Boundary("RutaColca_boundary", "RutaColca", $tags="") {
+  Container(RutaColca.WebdelTurista, "Web del Turista", $techn="React (SPA)", $descr="Permite a los turistas explorar catálogo de tours, seleccionar fechas y pagar reservas en línea.", $tags="", $link="")
+  Container(RutaColca.APIBackend, "API Backend", $techn="Java 21, Spring Boot", $descr="Provee la lógica de negocio para tours, validación de boletos turísticos, orquestación de pagos resilientes con Outbox y notificaciones.", $tags="", $link="")
+  ContainerDb(RutaColca.BasedeDatosPrincipal, "Base de Datos Principal", $techn="PostgreSQL 16", $descr="Almacena información de agencias, guías, tours, cupos, boletos validados, transacciones y cola de pagos outbox.", $tags="", $link="")
+}
+
+Person(Turista, "Turista", $descr="Visitante interesado en buscar, reservar y pagar tours hacia el Valle del Colca.", $tags="", $link="")
+System(PasareladePagos, "Pasarela de Pagos", $descr="Servicio externo para procesamiento seguro de pagos con tarjetas bancarias y billeteras móviles.", $tags="", $link="")
+System(WhatsAppBusiness, "WhatsApp Business", $descr="Plataforma externa de mensajería empresarial para entrega automatizada de itinerarios.", $tags="", $link="")
+
+Rel(Turista, RutaColca.WebdelTurista, "1: 1. Envía solicitud de reserva con boleto y datos de pago", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.WebdelTurista, RutaColca.APIBackend, "2: 2. Despacha intento de reserva y cobro (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, PasareladePagos, "3: 3. Intenta cobro síncrono; pasarela no responde (Timeout 3s / HTTP 504)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.BasedeDatosPrincipal, "4: 4. Registra atómicamente la reserva y la orden en la tabla pagos_outbox (Estado: PENDIENTE_PAGO)", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.WebdelTurista, "5: 5. Retorna confirmación de reserva diferida con ticket de seguimiento temporal (JSON/HTTPS)", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.WebdelTurista, Turista, "6: 6. Informa que su reserva está asegurada y su pago en proceso de verificación", $techn="HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.BasedeDatosPrincipal, "7: 7. Worker Outbox sondea pagos diferidos con SELECT ... FOR UPDATE SKIP LOCKED", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.APIBackend, PasareladePagos, "8: 8. Pasarela se restablece; Worker reintenta y confirma cobro exitoso con Idempotency-Key", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(RutaColca.APIBackend, RutaColca.BasedeDatosPrincipal, "9: 9. Actualiza reserva a CONFIRMADA_PAGADA y marca outbox como PROCESADO", $techn="JDBC", $tags="", $link="")
+Rel(RutaColca.APIBackend, WhatsAppBusiness, "10: 10. Solicita envío de voucher confirmado e itinerario oficial", $techn="JSON/HTTPS", $tags="", $link="")
+Rel(WhatsAppBusiness, Turista, "11: 11. Notifica voucher de pago confirmado y código QR del boleto turístico al WhatsApp del turista", $techn="WhatsApp Protocol", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml
