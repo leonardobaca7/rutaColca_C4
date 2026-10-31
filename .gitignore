@@ -1,0 +1,16 @@
+# Archivos de entrega formal e informes (no deben subirse al repo público)
+*.docx
+*.doc
+*INFORME*
+build_*_report*.py
+
+# Compilación de Java y artefactos temporales
+bin/
+*.class
+target/
+.idea/
+*.iml
+.vscode/
+
+# Logs del sistema
+*.log
