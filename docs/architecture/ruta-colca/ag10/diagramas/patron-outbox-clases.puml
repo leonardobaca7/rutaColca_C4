@@ -1,0 +1,112 @@
+@startuml patron-outbox-clases
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 11
+skinparam roundCorner 8
+skinparam shadowing true
+
+skinparam class {
+    BackgroundColor #F9FBFD
+    BorderColor #0B3D62
+    ArrowColor #1B5E8B
+    HeaderBackgroundColor #0B3D62
+    HeaderFontColor #FFFFFF
+}
+
+package "com.rutacolca.ag10.dominio (Núcleo Puro)" #F4F6F7 {
+    enum EstadoReserva {
+        SOLICITADA
+        PENDIENTE_PAGO
+        CONFIRMADA_PAGADA
+        CANCELADA_FALLIDA
+    }
+
+    enum EstadoPagoOutbox {
+        PENDIENTE
+        PROCESANDO
+        PROCESADO_EXITOSO
+        DEAD_LETTER_FALLIDO
+    }
+
+    class Reserva {
+        - id: String
+        - turistaNombre: String
+        - tourId: String
+        - montoTotal: double
+        - estado: EstadoReserva
+        - fechaCreacion: LocalDateTime
+        - fechaActualizacion: LocalDateTime
+        + confirmarPago(): void
+        + marcarPendientePago(): void
+    }
+
+    class RegistroOutboxPago {
+        - outboxId: String
+        - reservaId: String
+        - monto: double
+        - idempotencyKey: String
+        - estado: EstadoPagoOutbox
+        - intentos: int
+        - ultimoError: String
+        - fechaCreacion: LocalDateTime
+        - proximoIntento: LocalDateTime
+        + incrementarIntentos(): void
+        + programarProximoIntento(delay: long): void
+    }
+
+    Reserva "1" *-- "1" EstadoReserva
+    RegistroOutboxPago "1" *-- "1" EstadoPagoOutbox
+    Reserva "1" ..> "1" RegistroOutboxPago : "origen transaccional"
+}
+
+package "com.rutacolca.ag10.resiliencia" #EBF5FB {
+    enum EstadoCircuito {
+        CLOSED
+        OPEN
+        HALF_OPEN
+    }
+
+    class CircuitBreaker {
+        - nombre: String
+        - umbralFallosConsecutivos: int
+        - tiempoEsperaEnfriamientoMs: long
+        - estado: EstadoCircuito
+        - fallosConsecutivos: AtomicInteger
+        - timestampAperturaMs: long
+        + permiteEjecucion(): boolean
+        + registrarExito(): void
+        + registrarFallo(causa: String): void
+    }
+
+    CircuitBreaker "1" *-- "1" EstadoCircuito
+}
+
+package "com.rutacolca.ag10.servicio" #EAFAF1 {
+    interface PasarelaPagosClient <<Puerto Hexagonal>> {
+        + cobrar(reservaId: String, monto: double, idempotencyKey: String): boolean
+    }
+
+    class SimuladorPasarelaPagos <<Adaptador Infraestructura>> {
+        - servicioCaido: AtomicBoolean
+        - latenciaSimuladaMs: long
+        + simularCaida(caida: boolean): void
+        + cobrar(reservaId: String, monto: double, idempotencyKey: String): boolean
+    }
+
+    class ProcesadorPagosOutboxService <<Orquestador Transaccional>> {
+        - pasarelaClient: PasarelaPagosClient
+        - circuitBreaker: CircuitBreaker
+        - tablaReservas: Map<String, Reserva>
+        - tablaOutboxPagos: List<RegistroOutboxPago>
+        + procesarSolicitudReserva(turista: String, tour: String, monto: double): Reserva
+        + ejecutarReconciliacionOutbox(): int
+    }
+
+    SimuladorPasarelaPagos ..|> PasarelaPagosClient
+    ProcesadorPagosOutboxService --> PasarelaPagosClient
+    ProcesadorPagosOutboxService --> CircuitBreaker
+    ProcesadorPagosOutboxService ..> Reserva
+    ProcesadorPagosOutboxService ..> RegistroOutboxPago
+}
+
+@enduml

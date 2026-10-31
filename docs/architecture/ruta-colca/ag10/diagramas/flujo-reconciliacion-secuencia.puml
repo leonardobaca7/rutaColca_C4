@@ -1,0 +1,92 @@
+@startuml flujo-reconciliacion-secuencia
+autonumber
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 11
+skinparam shadowing true
+
+skinparam sequence {
+    ArrowColor #0B3D62
+    LifeLineBorderColor #1B5E8B
+    LifeLineBackgroundColor #EBF3FA
+    ParticipantBorderColor #0B3D62
+    ParticipantBackgroundColor #0B3D62
+    ParticipantFontColor #FFFFFF
+    ParticipantFontStyle bold
+    ActorBorderColor #0B3D62
+    ActorBackgroundColor #0B3D62
+    ActorFontColor #0B3D62
+}
+
+actor "Turista\n(Navegador / App)" as Turista
+participant "API Backend\n(Spring Boot 3)" as API
+participant "Circuit Breaker\n(Resilience4j)" as CB
+database "PostgreSQL 16\n(Transacción Local)" as DB
+participant "Outbox Relay Worker\n(Virtual Threads)" as Worker
+participant "Pasarela Externa\n(Niubiz / PayPal)" as Pasarela
+participant "WhatsApp Business\n(Notificaciones)" as WA
+
+== Fase 1: Llegada de Reserva durante Caída Externa (15 min) ==
+Turista -> API: POST /api/reservas (Datos tour, pasajeros, pago)
+activate API
+
+API -> CB: permiteEjecucion()
+activate CB
+CB --> API: false (Circuito OPEN por fallos previos)
+deactivate CB
+
+note over API, DB
+  <b>TRANSACCIÓN ATÓMICA ACID LOCAL:</b>
+  En una única transacción en PostgreSQL se insertan:
+  1. Tabla 'reservas' con estado PENDIENTE_PAGO
+  2. Tabla 'pagos_outbox' con Idempotency-Key
+end note
+
+API -> DB: BEGIN TRANSACTION
+API -> DB: INSERT INTO reservas (id, estado='PENDIENTE_PAGO')
+API -> DB: INSERT INTO pagos_outbox (reserva_id, estado='PENDIENTE', idempotency_key)
+API -> DB: COMMIT TRANSACTION
+
+API --> Turista: 200 OK {reservaId, estado: "PENDIENTE_PAGO", ticketSeguimiento}\n(Respuesta inmediata en ≤ 1.2 s)
+deactivate API
+
+== Fase 2: Reconciliación Asíncrona tras Recuperación ==
+note over Worker
+  <b>Tarea Programada @Scheduled (Cada 15 segundos):</b>
+  Ejecutada concurrentemente mediante hilos virtuales ligeros de Java 21
+end note
+
+Worker -> DB: SELECT * FROM pagos_outbox\nWHERE estado = 'PENDIENTE'\nORDER BY fecha_creacion ASC\nLIMIT 50 FOR UPDATE SKIP LOCKED
+activate DB
+DB --> Worker: Lote de 50 registros pendientes
+deactivate DB
+activate Worker
+
+Worker -> CB: permiteEjecucion()
+activate CB
+CB --> Worker: true (HALF_OPEN / CLOSED)
+deactivate CB
+
+loop Por cada registro en el lote de salida
+    Worker -> Pasarela: POST /v1/cargos (monto, Idempotency-Key)
+    activate Pasarela
+    Pasarela --> Worker: 200 OK (Transacción Aprobada / AuthCode)
+    deactivate Pasarela
+
+    Worker -> CB: registrarExito()
+    
+    Worker -> DB: BEGIN TRANSACTION
+    Worker -> DB: UPDATE reservas SET estado = 'CONFIRMADA_PAGADA' WHERE id = ?
+    Worker -> DB: UPDATE pagos_outbox SET estado = 'PROCESADO_EXITOSO' WHERE id = ?
+    Worker -> DB: COMMIT TRANSACTION
+
+    Worker -> WA: POST /mensajes (Itinerario, Voucher digital, QR)
+    activate WA
+    WA --> Worker: 202 Accepted
+    deactivate WA
+end
+
+WA -> Turista: Notificación WhatsApp con voucher confirmado y código QR oficial
+deactivate Worker
+
+@enduml

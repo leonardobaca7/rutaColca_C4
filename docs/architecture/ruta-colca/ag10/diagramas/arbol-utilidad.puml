@@ -1,0 +1,60 @@
+@startuml arbol-utilidad
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 11
+skinparam roundCorner 10
+skinparam shadowing true
+
+skinparam node {
+    BackgroundColor #0B3D62
+    FontColor #FFFFFF
+    BorderColor #072A44
+    FontSize 12
+    FontStyle bold
+}
+
+skinparam card {
+    BackgroundColor #EBF3FA
+    BorderColor #1B5E8B
+    FontColor #141414
+}
+
+skinparam rectangle {
+    BackgroundColor #FAFAFA
+    BorderColor #8C8C8C
+    FontColor #141414
+}
+
+rectangle "UTILIDAD GLOBAL DEL SISTEMA\nPlataforma RutaColca en Temporada Alta (Julio / Agosto)" as Root #0B3D62;text:white
+
+card "**RENDIMIENTO**\n(Eficiencia de Desempeño)" as C_Rend #E8F4F8;line:1B5E8B
+card "**DISPONIBILIDAD**\n(Resiliencia Operativa)" as C_Disp #FFF0F0;line:D9534F;text:D9534F
+card "**SEGURIDAD**\n(Integridad y Autorización)" as C_Seg #F5EEF8;line:6C3483
+card "**MODIFICABILIDAD**\n(Evolución del Dominio)" as C_Mod #EAFAF1;line:1E8449
+card "**INTEROPERABILIDAD**\n(Conectividad Externa)" as C_Inter #FEF9E7;line:B7950B
+
+rectangle "**E1 · Concurrencia Masiva**\n**Prioridad: (A, M)**\n2000 turistas consultan disponibilidad al mismo tiempo.\n--\n**Medida:** p95 ≤ 1.5 s" as E1
+rectangle "**E2 · Caída de Pasarela de Pagos**\n**Prioridad: (A, A) [MÁXIMO RIESGO]**\nLa pasarela externa no responde durante 15 minutos.\n--\n**Medida:** 0 reservas pagadas perdidas;\nconfirmación ≤ 30 min tras recuperación" as E2 #FFD2D2;line:D9534F
+rectangle "**E3 · Intento de Manipulación BOLA**\n**Prioridad: (A, M)**\nOperador intenta modificar un tour de otra agencia.\n--\n**Medida:** 100% de intentos bloqueados (403)\ny registrados en auditoría" as E3
+rectangle "**E4 · Incorporación de PayPal**\n**Prioridad: (M, B)**\nConsorcio solicita aceptar PayPal para extranjeros.\n--\n**Medida:** ≤ 3 días-persona de desarrollo;\n0 cambios en el núcleo de dominio" as E4
+rectangle "**E5 · Interrupción de AUTOCOLCA**\n**Prioridad: (A, M)**\nServicio de validación de boletos no responde.\n--\n**Medida:** Boletos pendientes validados ≤ 2 h;\n0 cobros indebidos a turistas" as E5
+
+Root --> C_Rend
+Root --> C_Disp
+Root --> C_Seg
+Root --> C_Mod
+Root --> C_Inter
+
+C_Rend --> E1
+C_Disp --> E2
+C_Seg --> E3
+C_Mod --> E4
+C_Inter --> E5
+
+note bottom of E2
+  <b>Foco Metodológico de la Iteración ADD 3.0:</b>
+  Escenario calificado como (Alta Importancia, Alta Dificultad).
+  Concentra el riesgo operativo crítico en temporada alta.
+end note
+
+@enduml

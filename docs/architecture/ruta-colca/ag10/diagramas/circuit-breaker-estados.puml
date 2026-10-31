@@ -1,0 +1,54 @@
+@startuml circuit-breaker-estados
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 11
+skinparam roundCorner 10
+skinparam shadowing true
+
+skinparam state {
+    BackgroundColor #F0F4F8
+    BorderColor #0B3D62
+    FontColor #141414
+    FontSize 12
+    FontStyle bold
+    ArrowColor #1B5E8B
+}
+
+[*] --> CLOSED : Inicialización del sistema\n(Operación normal)
+
+state CLOSED {
+    CLOSED : **Peticiones HTTP fluyen normalmente**
+    CLOSED : hacia la pasarela de pagos externa.
+    CLOSED : --
+    CLOSED : Contador de fallos consecutivos = 0
+    CLOSED : Monitoreo de latencia y código HTTP
+}
+
+state OPEN {
+    OPEN : **Llamadas síncronas bloqueadas (Fast-Fail)**
+    OPEN : Interrumpe peticiones salientes de inmediato (0 ms)
+    OPEN : para proteger el pool de hilos de la JVM.
+    OPEN : --
+    OPEN : Redirección automática a **Transactional Outbox**
+    OPEN : Temporizador de enfriamiento activo (30 s / 500 ms)
+}
+
+state HALF_OPEN {
+    HALF_OPEN : **Prueba de Recuperación (Tráfico Piloto)**
+    HALF_OPEN : Permite 1 petición piloto hacia la pasarela
+    HALF_OPEN : para verificar si el servicio externo revivió.
+}
+
+CLOSED --> OPEN : **3 fallos consecutivos**\n(HTTP 504 / SocketTimeout)\n[Corte externo detectado]
+OPEN --> HALF_OPEN : **Ventana de enfriamiento transcurrida**\n(Tiempo ≥ 30 s sin peticiones salientes)
+HALF_OPEN --> CLOSED : **Petición piloto exitosa (200 OK)**\n[Pasarela restablecida / Reset fallos]
+HALF_OPEN --> OPEN : **Petición piloto falla (Timeout / 504)**\n[Pasarela aún caída / Reinicia enfriamiento]
+
+note right of OPEN
+  <b>Táctica de Disponibilidad:</b>
+  Evita el agotamiento en cascada
+  del pool de hilos (Thread Starvation)
+  en el contenedor API Backend.
+end note
+
+@enduml
