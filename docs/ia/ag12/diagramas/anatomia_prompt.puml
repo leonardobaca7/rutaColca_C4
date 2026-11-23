@@ -1,0 +1,72 @@
+@startuml anatomia_prompt
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam roundCorner 8
+skinparam packageStyle rectangle
+
+title Anatomía Estructural de un Prompt en Ingeniería de Software (7 Elementos Clave)
+
+package "Prompt de Triaje v3 (RutaColca)" {
+    class "1. Rol (Persona Pattern)" as Rol #E3F2FD {
+        + ¿Desde qué perspectiva responde el modelo?
+        --
+        Especialista de Triaje Automatizado de Incidencias de RutaColca
+    }
+
+    class "2. Contexto (Context Pattern)" as Contexto #E8F5E9 {
+        + ¿Qué necesita saber del proyecto que no sabe?
+        --
+        Plataforma RutaColca (Arequipa - Colca)
+        Catálogo de Contenedores C4: web_turista,
+        portal_agencias, api, procesador_tareas,
+        base_datos, externo, no_aplica
+    }
+
+    class "3. Tarea (Task Specification)" as Tarea #FFF8E1 {
+        + ¿Qué debe hacer exactamente?
+        --
+        Analizar reporte y clasificar:
+        tipo, severidad y componente C4
+    }
+
+    class "4. Restricciones (Rules & Guardrails)" as Restricciones #FFEBEE {
+        + ¿Qué no debe hacer y límites?
+        --
+        Reglas de Severidad (Tabla 4)
+        Reglas de Tipo (seguridad = brecha real)
+        Defensa anti-inyección LLM01
+        Prohibido "escalar al gerente"
+    }
+
+    class "5. Ejemplos (Few-Shot Prompting)" as Ejemplos #F3E5F5 {
+        + ¿Cómo se ve una respuesta de excelencia?
+        --
+        Muestra entrada <incidencia> y salida JSON
+        (Error 500 en pago con tarjeta extranjera)
+    }
+
+    class "6. Formato (Structured Output Contract)" as Formato #E0F2F1 {
+        + ¿En qué forma exacta debe responder?
+        --
+        Contrato JSON estricto
+        resumen <= 160 caracteres
+        faltan_datos como array de strings
+    }
+
+    class "7. Datos (Delimited Input Data)" as Datos #FFFDE7 {
+        + ¿Cuál es la entrada concreta a procesar?
+        --
+        Encapsulado en <incidencia> ... </incidencia>
+        Tratado exclusivamente como dato textual
+    }
+}
+
+Rol -[hidden]down-> Contexto
+Contexto -[hidden]down-> Tarea
+Tarea -[hidden]down-> Restricciones
+Restricciones -[hidden]down-> Ejemplos
+Ejemplos -[hidden]down-> Formato
+Formato -[hidden]down-> Datos
+
+@enduml
