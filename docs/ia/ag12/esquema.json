@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["tipo", "severidad", "componente", "resumen", "faltan_datos"],
+  "properties": {
+    "tipo": {
+      "enum": ["defecto", "solicitud_de_cambio", "consulta", "seguridad"]
+    },
+    "severidad": {
+      "enum": ["critica", "alta", "media", "baja"]
+    },
+    "componente": {
+      "enum": [
+        "web_turista",
+        "portal_agencias",
+        "api",
+        "procesador_tareas",
+        "base_datos",
+        "externo",
+        "no_aplica"
+      ]
+    },
+    "resumen": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "faltan_datos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

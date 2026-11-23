@@ -1,0 +1,65 @@
+@startuml flujo_triaje
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam roundCorner 8
+skinparam shadowing true
+
+skinparam activity {
+    BackgroundColor #E8F4F8
+    BorderColor #2B579A
+    FontColor #1C3B6F
+}
+
+skinparam decision {
+    BackgroundColor #FFF2CC
+    BorderColor #D6B656
+    FontColor #4D3800
+}
+
+skinparam note {
+    BackgroundColor #F8F9FA
+    BorderColor #6C757D
+}
+
+title Flujo de Triaje Automatizado de Incidencias en RutaColca (AG-12)
+
+start
+
+:Usuario/Agencia reporta incidencia técnica;
+note right: Entrada textual externa\n(Canal web / soporte)
+
+:Inyección en Prompt v3\n<incidencia>{incidencia}</incidencia>;
+note left: Delimitación de datos sintáctica\ny directiva de no-ejecución
+
+:Inferencia del Modelo de Lenguaje (LLM);
+note right: Aplica Rol, Reglas C4,\nTabla 4 de Severidad y Few-Shot
+
+:Salida bruta del modelo de lenguaje;
+
+if (¿Es JSON bien formado?) then (Sí)
+    :Validación contra esquema.json\n(Draft 2020-12);
+    if (¿Cumple tipos, enums y max 160 caracteres?) then (Sí)
+        if (¿Contiene frase prohibida "escalar al gerente"?) then (No)
+            :Clasificación Válida y Confiable;
+            :Enrutamiento automático al backlog del contenedor C4\n(web_turista, portal_agencias, api, procesador_tareas, externo);
+            :Revisión por Operador Humano (Human-in-the-loop);
+            stop
+        else (Sí)
+            :Alerta de Ciberseguridad;\nIntento de Manipulación Detectado;
+            :Rechazo de clasificación automatizada;
+            :Envío a Cola de Cuarentena y Auditoría de Seguridad;
+            stop
+        endif
+    else (No)
+        :Error de Contrato de Datos;\nViolación de Esquema JSON;
+        :Fallback: Reintento con temperatura 0 o\nDerivación a Triaje Manual de Emergencia;
+        stop
+    endif
+else (No)
+    :Error de Sintaxis (JSONDecodeError);\nTexto conversacional fuera de formato;
+    :Fallo de procesamiento desatendido;\nRegistro en log de errores;
+    stop
+endif
+
+@enduml
