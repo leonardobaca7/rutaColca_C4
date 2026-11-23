@@ -14,3 +14,9 @@ target/
 
 # Logs del sistema
 *.log
+
+# Material docente / temas de clase (no comitear al repo)
+docs/Tema12*
+docs/Tema13*
+docs/Tema14*
+docs/Tema15*
