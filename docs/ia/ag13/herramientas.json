@@ -1,0 +1,56 @@
+[
+  {
+    "nombre": "consultar_reserva",
+    "descripcion": "Devuelve los datos de una reserva y las notas del cliente.",
+    "parametros": ["codigo"],
+    "efecto": "lectura"
+  },
+  {
+    "nombre": "consultar_pago",
+    "descripcion": "Devuelve los cobros, montos y estado de una transacción.",
+    "parametros": ["id_transaccion"],
+    "efecto": "lectura"
+  },
+  {
+    "nombre": "buscar_logs",
+    "descripcion": "Busca líneas de log de un contenedor desde una fecha y hora.",
+    "parametros": ["servicio", "desde"],
+    "efecto": "lectura"
+  },
+  {
+    "nombre": "crear_ticket",
+    "descripcion": "Crea un ticket interno en el tablero del equipo.",
+    "parametros": ["titulo", "severidad", "componente"],
+    "efecto": "escritura interna, reversible"
+  },
+  {
+    "nombre": "responder_cliente",
+    "descripcion": "Envía un mensaje al turista por correo o WhatsApp.",
+    "parametros": ["codigo", "mensaje"],
+    "efecto": "comunicación externa"
+  },
+  {
+    "nombre": "reprogramar_tour",
+    "descripcion": "Cambia la fecha de un tour reservado.",
+    "parametros": ["codigo", "fecha"],
+    "efecto": "modifica una reserva"
+  },
+  {
+    "nombre": "reembolsar",
+    "descripcion": "Devuelve dinero de una transacción.",
+    "parametros": ["id_transaccion", "monto", "destino"],
+    "efecto": "dinero, irreversible"
+  },
+  {
+    "nombre": "ejecutar_sql",
+    "descripcion": "Ejecuta cualquier consulta SQL en la base de datos de producción.",
+    "parametros": ["consulta"],
+    "efecto": "lectura y escritura sin restricción"
+  },
+  {
+    "nombre": "desplegar_version",
+    "descripcion": "Despliega una versión de un contenedor en producción.",
+    "parametros": ["version"],
+    "efecto": "cambia producción"
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "max_pasos": 10,
+  "max_repeticiones": 2,
+  "por_defecto": "prohibir",
+  "herramientas": {
+    "consultar_reserva": "permitir",
+    "consultar_pago": "permitir",
+    "buscar_logs": "permitir",
+    "crear_ticket": "permitir",
+    "responder_cliente": "aprobar",
+    "reprogramar_tour": "aprobar",
+    "reembolsar": "aprobar",
+    "ejecutar_sql": "prohibir",
+    "desplegar_version": "prohibir"
+  },
+  "limites": {
+    "reembolsar": {
+      "monto": {
+        "max": 500
+      },
+      "destino": {
+        "valores": [
+          "medio_original"
+        ]
+      }
+    }
+  }
+}

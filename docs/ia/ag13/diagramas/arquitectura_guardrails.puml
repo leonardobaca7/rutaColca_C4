@@ -1,0 +1,51 @@
+@startuml arquitectura_guardrails
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam roundCorner 8
+
+skinparam rectangle {
+    BackgroundColor #F8F9FA
+    BorderColor #6C757D
+}
+
+title Arquitectura de Invocación Segura de Herramientas (Function Calling + Guardrails)
+
+rectangle "1. Núcleo Cognitivo del Agente (LLM)" as LLM #EDE7F6 {
+    [Inferencia ReAct: Pensamiento + Propuesta de Acción] as Propose
+}
+
+rectangle "2. Capa de Contrato Estricto (Sintaxis)" as ContractLayer #E1F5FE {
+    [Validador JSON Schema (Draft 2020-12)] as ContractVal
+    note right: Verifica claves requeridas\ny pertenencia al catálogo cerrado
+}
+
+rectangle "3. Motor de Política y Guardrails (Semántica & Negocio)" as PolicyEngine #FFF3E0 {
+    [Evaluador de Política (politica.py)] as PolicyVal
+    note right: 1. Presupuesto de pasos (max_pasos)\n2. Detección de bucles (max_repeticiones)\n3. Regla de herramienta (permitir, aprobar, prohibir)\n4. Límites de parámetros (monto <= 500, destino)
+}
+
+rectangle "4. Puerta de Control Humano (Human-in-the-Loop)" as HumanGate #E8F5E9 {
+    [Operador Humano de RutaColca] as HumanReview
+    note right: Aprueba o rechaza acciones\nfinancieras o externas
+}
+
+rectangle "5. Entorno Operativo y Contenedores C4" as Environment #FBE9E7 {
+    [Pasarela de Pagos / PostgreSQL / APIs Externas] as ExecEnvironment
+}
+
+Propose --> ContractVal : JSON de decisión
+ContractVal --> PolicyVal : [contrato válido]
+ContractVal --> LLM : [error de contrato vuelve como observación]
+
+PolicyVal --> ExecEnvironment : [PERMITIR: acción de solo lectura o ticket interno]
+PolicyVal --> HumanReview : [APROBAR: cumple límites y requiere confirmación]
+PolicyVal --> LLM : [BLOQUEAR: motivo vuelve como observación]
+PolicyVal --> LLM : [DETENER: bucle o pasos agotados]
+
+HumanReview --> ExecEnvironment : [aprobada]
+HumanReview --> LLM : [rechazada vuelve como observación]
+
+ExecEnvironment --> LLM : [observación / datos de retorno]
+
+@enduml

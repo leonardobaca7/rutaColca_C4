@@ -1,0 +1,17 @@
+{
+  "max_pasos": 50,
+  "max_repeticiones": 99,
+  "por_defecto": "permitir",
+  "herramientas": {
+    "consultar_reserva": "permitir",
+    "consultar_pago": "permitir",
+    "buscar_logs": "permitir",
+    "crear_ticket": "permitir",
+    "responder_cliente": "permitir",
+    "reprogramar_tour": "permitir",
+    "reembolsar": "permitir",
+    "ejecutar_sql": "permitir",
+    "desplegar_version": "permitir"
+  },
+  "limites": {}
+}
