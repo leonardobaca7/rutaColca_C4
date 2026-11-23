@@ -1,0 +1,73 @@
+@startuml maquina_estados
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam roundCorner 8
+skinparam shadowing true
+
+skinparam state {
+    BackgroundColor #E8F4F8
+    BorderColor #2B579A
+    FontColor #1C3B6F
+}
+
+title Máquina de Estados del Agente de Soporte de RutaColca (Bucle ReAct con Guardrails)
+
+[*] --> Decidiendo : Recibe objetivo (Incidencia)
+
+state Decidiendo {
+    Decidiendo : El LLM analiza historial
+    Decidiendo : y propone una decisión
+}
+
+state ValidandoContrato {
+    ValidandoContrato : Valida JSON contra
+    ValidandoContrato : Draft202012Validator
+}
+
+state EvaluandoPolitica {
+    EvaluandoPolitica : Aplica guardrails en código
+    EvaluandoPolitica : (permisos, límites, bucles)
+}
+
+state EsperandoAprobacion {
+    EsperandoAprobacion : Acción irreversible o externa
+    EsperandoAprobacion : Pausa esperando al humano
+}
+
+state EjecutandoHerramienta {
+    EjecutandoHerramienta : Invoca API / BD / Servicio
+    EjecutandoHerramienta : y captura observación
+}
+
+state Finalizado #D4EDDA {
+    Finalizado : Emite respuesta final
+    Finalizado : al usuario / cliente
+}
+
+state LimiteAlcanzado #F8D7DA {
+    LimiteAlcanzado : max_pasos agotado o
+    LimiteAlcanzado : repetición idéntica detectada
+}
+
+Decidiendo --> ValidandoContrato : [decisión propuesta]
+ValidandoContrato --> Decidiendo : [inválida: error de contrato vuelve como obs]
+ValidandoContrato --> Finalizado : [tipo == "final"]
+
+ValidandoContrato --> EvaluandoPolitica : [tipo == "accion"]
+
+EvaluandoPolitica --> Decidiendo : [bloqueada: motivo vuelve como obs]
+EvaluandoPolitica --> LimiteAlcanzado : [paso > máx o bucle repetido]
+
+EvaluandoPolitica --> EsperandoAprobacion : [requiere aprobación humana]
+EsperandoAprobacion --> Decidiendo : [rechazada por humano]
+EsperandoAprobacion --> EjecutandoHerramienta : [aprobada por humano]
+
+EvaluandoPolitica --> EjecutandoHerramienta : [permitida directamente]
+
+EjecutandoHerramienta --> Decidiendo : [observación / resultado entra a historial]
+
+Finalizado --> [*]
+LimiteAlcanzado --> [*]
+
+@enduml

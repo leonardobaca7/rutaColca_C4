@@ -1,0 +1,27 @@
+@startuml espectro_autonomia
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam roundCorner 8
+skinparam packageStyle rectangle
+
+title Espectro de Autonomía y Delegación Progresiva en Sistemas de Software con IA
+
+rectangle "Espectro de Autonomía de Agentes (Albada 2025, Anthropic 2024)" {
+    rectangle "Nivel 4: Autónomo Auditado\n• El agente decide y ejecuta libremente\n• La persona audita reglas a posteriori\n• Riesgo máximo: Prohibido en soporte financiero" as N4 #F8D7DA
+    
+    rectangle "Nivel 3: Actúa y Reporta\n• Ejecuta sin espera acciones de bajo riesgo\n• Reporta de inmediato al equipo\n• Usado en RutaColca para: consultar_* y crear_ticket" as N3 #D1ECF1
+    
+    rectangle "Nivel 2: Actúa con Aprobación Previa\n• El agente propone la acción y sus argumentos\n• Pausa la ejecución hasta confirmación humana\n• Usado en RutaColca para: reembolsar, reprogramar_tour, responder_cliente" as N2 #D4EDDA
+    
+    rectangle "Nivel 1: Sugiere / Copiloto\n• El agente propone el plan; el humano ejecuta manualmente\n• Cero riesgo de ejecución automática\n• Alta fricción en tareas repetitivas" as N1 #FFF3CD
+    
+    rectangle "Nivel 0: Solo Lectura / Consulta Estática\n• El modelo clasifica y resume texto\n• Caso AG-12: Triaje de incidencias" as N0 #E2E3E5
+}
+
+N0 -[hidden]down-> N1
+N1 -[hidden]down-> N2
+N2 -[hidden]down-> N3
+N3 -[hidden]down-> N4
+
+@enduml
