@@ -1,0 +1,9 @@
+# Lista de dependencias externas aprobadas para el proyecto RutaColca
+# Cualquier paquete importado que no pertenezca a la biblioteca estándar de Python (stdlib),
+# al módulo interno 'rutacolca' o a este archivo, será rechazado por la compuerta de calidad.
+pytest
+pytest_cov
+pydantic
+mcp
+mcp_types
+typing_extensions

@@ -1,0 +1,9 @@
+﻿FALLA 1. Pruebas de la spec    8 failed, 7 passed in 0.67s
+PASA  2. Cobertura >= 90 %     94 %
+FALLA 3. Estilo y errores      E501, S602, E501, E501
+FALLA 4. Seguridad (bandit)    B602
+PASA  5. Complejidad <= 10     máxima 6
+FALLA 6. Dependencias aprobadas reembolsos_peru
+FALLA 7. Regla de la política  límite escrito a mano
+
+Resultado: 2/7 compuertas

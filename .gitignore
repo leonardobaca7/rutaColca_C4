@@ -22,3 +22,9 @@ docs/Tema12*
 docs/Tema13*
 docs/Tema14*
 docs/Tema15*
+
+# Artefactos de pruebas y cobertura
+.coverage
+.coverage.*
+.pytest_cache/
+cov*.json

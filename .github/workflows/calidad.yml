@@ -1,0 +1,35 @@
+name: Compuertas de Calidad para Desarrollo Asistido por IA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verificar_compuertas:
+    name: Verificación de Compuertas de Calidad (7/7)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias y herramientas de calidad
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov ruff bandit radon
+
+      - name: Ejecutar pruebas unitarias de la especificación (TDD)
+        run: |
+          python -m pytest -q tests
+
+      - name: Ejecutar compuertas de calidad integrales
+        run: |
+          python calidad/verificar.py rutacolca.reembolso
