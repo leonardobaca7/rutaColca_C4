@@ -1,0 +1,56 @@
+@startuml ciclo_vida_mcp
+!theme plain
+autonumber
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam roundcorner 8
+skinparam shadowing false
+
+title Ciclo de Vida y Protocolo MCP (Especificación 2026-07-28)
+
+actor "Usuario / Desarrollador" as User #E1F5FE
+participant "MCP Host (LLM Client)" as Host #C8E6C9
+participant "Servidor MCP (RutaColca)" as Server #BBDEFB
+database "Backend RutaColca" as Backend #E1BEE7
+
+== Fase 1: Descubrimiento de Capacidades (Stateless Handshake) ==
+Host -> Server: JSON-RPC: server/discover\n{clientInfo: {...}, _meta: {protocolVersion: "2026-07-28"}}
+Server --> Host: Result: serverInfo: {name: "rutacolca", version: "2.0.0"},\ncapabilities: {tools, resources, prompts}
+
+Host -> Server: JSON-RPC: tools/list
+Server --> Host: Result: [consultar_reserva, consultar_pago, buscar_logs, crear_ticket]
+
+Host -> Server: JSON-RPC: resources/list
+Server --> Host: Result: [rutacolca://contenedores, rutacolca://politica-agente, ...]
+
+Host -> Server: JSON-RPC: prompts/list
+Server --> Host: Result: [triaje_incidencia, respuesta_turista]
+
+== Fase 2: Ejecución de Herramienta de Lectura (Read Tool) ==
+User -> Host: "¿Cuál es el estado de la reserva RC-2291?"
+Host -> Host: Identifica intención y evalúa inputSchema
+Host -> Server: JSON-RPC: tools/call\n{name: "consultar_reserva", arguments: {codigo: "RC-2291"}}
+Server -> Backend: SELECT * FROM reservas WHERE codigo='RC-2291'
+Backend --> Server: Registro de Valeria Morales (CONFIRMADA)
+Server --> Host: Result: {content: [...], structuredContent: {codigo, titular, estado}, isError: false}
+Host --> User: "La reserva RC-2291 de Valeria Morales para el Cañón del Colca está CONFIRMADA."
+
+== Fase 3: Validación Estricta de Esquema y Manejo de Errores ==
+User -> Host: "Verifica el estado del código 2291"
+Host -> Server: JSON-RPC: tools/call\n{name: "consultar_reserva", arguments: {codigo: "2291"}}
+Server -> Server: Valida regex ^RC-\\d{4}$ -> Falla
+Server --> Host: Result: {content: ["Código de reserva mal formado. Debe cumplir el formato 'RC-NNNN'"], isError: true}
+Host --> User: "El código '2291' no es válido. RutaColca requiere el formato 'RC-NNNN' (ej. RC-2291)."
+
+== Fase 4: Herramienta de Escritura y Supervisión Humana (Human-in-the-Loop) ==
+User -> Host: "Abre un ticket por timeout en la pasarela de pagos"
+Host -> Host: Revisa anotaciones de crear_ticket\n(readOnlyHint: false, destructiveHint: false)
+Host -> User: "**Requiere Confirmación:** ¿Deseas registrar ticket SEV-Alta en 'pagos'?"
+User --> Host: "Sí, confirmo la creación del ticket"
+Host -> Server: JSON-RPC: tools/call\n{name: "crear_ticket", arguments: {titulo, severidad: "alta", componente: "pagos"}}
+Server -> Backend: INSERT INTO tickets (...)
+Backend --> Server: Ticket TCK-1663 generado
+Server --> Host: Result: {content: [...], structuredContent: {ticket_id: "TCK-1663", estado: "ABIERTO"}, isError: false}
+Host --> User: "Ticket TCK-1663 registrado exitosamente para el equipo de guardia."
+
+@enduml

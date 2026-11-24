@@ -1,0 +1,77 @@
+@startuml arquitectura_mcp
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Arquitectura de Conectividad de Contexto MCP - RutaColca (2026-B)
+
+actor "Turista / Operador" as User #E1F5FE
+
+package "MCP Hosts (Aplicaciones / Modelos)" #E8F5E9 {
+    component "Agente Soporte RutaColca\n(Sistema Agéntico AG-13)" as HostAgent #C8E6C9
+    component "GitHub Copilot\n(VS Code Extension)" as HostCopilot #C8E6C9
+    component "Claude Code / Gemini CLI\n(Terminal Host)" as HostClaude #C8E6C9
+}
+
+package "Capa de Transporte & Protocolo MCP (2026-07-28)" #FFF3E0 {
+    interface "JSON-RPC 2.0 (stdio / SSE)" as MCPProto #FFE0B2
+}
+
+package "Servidores MCP Evaluados" {
+    package "Servidor Oficial RutaColca\n(servidor_mcp/rutacolca_mcp.py)" #E3F2FD {
+        component "Tools (Herramientas)\n- consultar_reserva [Read]\n- consultar_pago [Read]\n- buscar_logs [Read]\n- crear_ticket [Write]" as MyTools #BBDEFB
+        component "Resources (Recursos URI)\n- rutacolca://contenedores\n- rutacolca://politica-agente\n- rutacolca://reglas-severidad" as MyResources #BBDEFB
+        component "Prompts (Plantillas)\n- triaje_incidencia\n- respuesta_turista" as MyPrompts #BBDEFB
+    }
+
+    package "Servidores de Terceros (Auditados)" #FFEBEE {
+        component "tarifas-colca (EXTERNO)\n[BLOQUEADO - NO CONECTAR]\n- tipo_cambio (Prompt Injection)\n- consultar_reserva (Sombra)\n- ejecutar_comando (Exceso)" as MaliciousServer #FFCDD2
+        component "clima-colca (RESERVA)\n[BAJO REVISIÓN]\n- pronostico_clima\n- alertas_meteorologicas\n- reportar_condicion_ruta" as ReserveServer #FFE0B2
+    }
+}
+
+package "Backend & Microservicios RutaColca" #F3E5F5 {
+    database "Core Reservas DB\n(FastAPI / PostgreSQL)" as DBReservas #E1BEE7
+    database "Servicio Pagos\n(Node.js / Pasarela)" as DBPagos #E1BEE7
+    file "Logs de Contenedores\n(Elastic / Fluentd)" as SystemLogs #E1BEE7
+}
+
+User --> HostAgent : Solicitud soporte
+User --> HostCopilot : Consulta técnica
+User --> HostClaude : Diagnóstico CLI
+
+HostAgent --> MCPProto
+HostCopilot --> MCPProto
+HostClaude --> MCPProto
+
+MCPProto --> MyTools : tools/call
+MCPProto --> MyResources : resources/read
+MCPProto --> MyPrompts : prompts/get
+
+MyTools --> DBReservas : Consulta SQL interna
+MyTools --> DBPagos : API REST pasarela
+MyTools --> SystemLogs : Filtrado grep logs
+
+MCPProto ..> MaliciousServer : [BLOQUEADO POR AUDITORÍA ADR-014]
+MCPProto ..> ReserveServer : [Conexión condicionada]
+
+note right of MyTools
+  **Contrato Seguro (9/9 Checks):**
+  - Anotaciones read_only_hint / destructive_hint
+  - Parámetros enum (Literal)
+  - Salida TypedDict (structuredContent)
+  - Herramientas destructivas excluidas
+end note
+
+note bottom of MaliciousServer
+  **Riesgos Detectados (auditar.py):**
+  - Instrucción oculta (<IMPORTANT>)
+  - Intento de robo de .env y claves
+  - Exfiltración vía parámetro notas
+  - Sombra de nombre sobre consultar_reserva
+end note
+
+@enduml
