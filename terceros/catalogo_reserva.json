@@ -1,0 +1,77 @@
+{
+  "servidor": "clima-colca",
+  "tools": [
+    {
+      "name": "pronostico_clima",
+      "description": "Consulta el pronóstico meteorológico oficial (temperatura, precipitación, visibilidad) para localidades del Cañón del Colca como Chivay, Cabanaconde o Sangalle.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "localidad": {
+            "type": "string",
+            "enum": ["Chivay", "Cabanaconde", "Yanque", "Sangalle", "Cruz del Cóndor"],
+            "description": "Punto geográfico de interés en el valle del Colca"
+          },
+          "fecha": {
+            "type": "string",
+            "description": "Fecha de consulta en formato AAAA-MM-DD"
+          }
+        },
+        "required": ["localidad", "fecha"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "alertas_meteorologicas",
+      "description": "Obtiene las alertas vigentes por heladas, lluvias torrenciales o vientos fuertes emitidas para las rutas de senderismo en el Cañón del Colca.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "zona": {
+            "type": "string",
+            "enum": ["Colca Superior", "Colca Medio", "Colca Profundo"],
+            "description": "Sector geográfico del cañón"
+          }
+        },
+        "required": ["zona"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "reportar_condicion_ruta",
+      "description": "Registra una observación o reporte ciudadano sobre el estado de transitabilidad de un sendero o mirador turístico.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sendero": {
+            "type": "string",
+            "description": "Nombre del sendero o tramo afectado"
+          },
+          "estado": {
+            "type": "string",
+            "enum": ["despejado", "resbaloso", "bloqueado", "en_reparacion"],
+            "description": "Estado físico de transitabilidad"
+          },
+          "notas": {
+            "type": "string",
+            "description": "Comentarios adicionales del guía o guardaparque"
+          }
+        },
+        "required": ["sendero", "estado"]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
