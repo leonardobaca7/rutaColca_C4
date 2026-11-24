@@ -1,0 +1,46 @@
+@startuml matriz_defectos
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+title Matriz de Trazabilidad: Defectos del PR de la IA y Mecanismos de Intercepción
+
+package "Defectos en borrador_ia/reembolso_v0.py" #FFEBEE {
+    component "D1: Alucinación de Paquete\n(reembolsos_peru)" as D1 #FFCDD2
+    component "D2: Borde Erróneo de 72h\n(horas_antes > 72)" as D2 #FFCDD2
+    component "D3: Redondeo round-to-even\n(float y round nativo)" as D3 #FFCDD2
+    component "D4: Límite Quemado\n(monto > 500 hardcoded)" as D4 #FFCDD2
+    component "D5: Inyección de Comandos\n(subprocess shell=True)" as D5 #FFCDD2
+    component "D6: Sin Validación de Entradas\n(montos negativos / motivo inválido)" as D6 #FFCDD2
+    component "D7: Prueba que Confirma Bug\n(test_reembolso_medio espera 50%)" as D7 #FFCDD2
+}
+
+package "Compuertas de Calidad Automáticas y Revisión Humana" #E8F5E9 {
+    component "Compuerta 1:\nPruebas Unitarias de la Spec (TDD)" as G1 #C8E6C9
+    component "Compuerta 3:\nLinter de Estilo y Errores (Ruff S602)" as G3 #C8E6C9
+    component "Compuerta 4:\nSeguridad Estática (Bandit B602)" as G4 #C8E6C9
+    component "Compuerta 6:\nDependencias Aprobadas (AST)" as G6 #C8E6C9
+    component "Compuerta 7:\nRegla de la Política (LIMITE_AGENTE)" as G7 #C8E6C9
+    component "Revisión Humana del PR\n(Lista de Verificación Anexo A)" as HumanReview #FFE0B2
+}
+
+D1 --> G6 : Interceptado por AST check
+D2 --> G1 : Falla en test_porcentaje[72-100]
+D3 --> G1 : Falla en test_redondeo_mitad_hacia_arriba
+D4 --> G7 : Falla por regex (detecta 500 y falta LIMITE_AGENTE)
+D5 --> G3 : Alerta S602 (subprocess shell=True)
+D5 --> G4 : Alerta B602 (subprocess injection)
+D6 --> G1 : Falla en test_rechaza_entradas_invalidas
+D7 --> HumanReview : **ÚNICO MECANISMO DE DETECCIÓN**\n(Ninguna compuerta automática lo detecta)
+
+note bottom of HumanReview
+  **Principio DORA / AG-15:**
+  Ninguna compuerta automática es suficiente por sí sola.
+  La cobertura al 94 % ocultaba los 7 defectos.
+  La revisión humana experta es insustituible.
+end note
+
+@enduml

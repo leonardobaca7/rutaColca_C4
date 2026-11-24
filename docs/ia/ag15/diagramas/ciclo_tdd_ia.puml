@@ -1,0 +1,42 @@
+@startuml ciclo_tdd_ia
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam roundcorner 8
+skinparam shadowing false
+
+title Comparativa de Metodologías: Código Generado Ingenuo vs. TDD Asistido por IA
+
+box "Enfoque Ingenuo con IA (Borrador v0 - PR Defectuoso)" #FFEBEE
+    actor "Desarrollador" as DevNaive #FFCDD2
+    participant "Asistente de IA" as IANaive #FFCDD2
+    participant "Código v0" as CodeV0 #FFCDD2
+    participant "Pruebas IA" as TestsIA #FFCDD2
+end box
+
+box "Enfoque TDD Asistido por IA (Implementación Oficial RutaColca)" #E8F5E9
+    actor "Ingeniero Humano" as DevTDD #C8E6C9
+    participant "Especificación Gherkin\n(specs/hu-rc-21/spec.md)" as Spec #C8E6C9
+    participant "Suite TDD Independiente\n(tests/ - 15 pruebas)" as TestsTDD #C8E6C9
+    participant "Asistente con AGENTS.md" as IATDD #C8E6C9
+    participant "Código Oficial\n(rutacolca/reembolso.py)" as CodeOfficial #C8E6C9
+    participant "Compuertas de Calidad\n(calidad/verificar.py)" as Gates #C8E6C9
+end box
+
+== Ciclo 1: Generación Ingenua sin Especificación ==
+DevNaive -> IANaive : Prompt vago: "Haz la función de reembolso"
+IANaive -> CodeV0 : Genera código con 6 defectos estructurales
+IANaive -> TestsIA : Genera 3 pruebas que confirman los bugs (Sesgo)
+TestsIA --> DevNaive : "3/3 pasan ✅" -> Falsa ilusión de corrección
+
+== Ciclo 2: TDD Riguroso Asistido por IA ==
+DevTDD -> Spec : Redacta 6 escenarios Gherkin con bordes exactos
+DevTDD -> TestsTDD : Escribe 15 pruebas unitarias TDD
+TestsTDD -> TestsTDD : **FASE ROJA (RED):** 8 fallan en borrador inicial
+DevTDD -> IATDD : Prompt guiado por spec, tests y AGENTS.md
+IATDD -> CodeOfficial : Propone implementación con Decimal y política
+CodeOfficial -> TestsTDD : **FASE VERDE (GREEN):** 15/15 pasan exitosamente
+CodeOfficial -> Gates : Verifica 7/7 compuertas automáticas
+DevTDD -> CodeOfficial : **REFACTOR:** Revisión humana final y merge a main
+
+@enduml

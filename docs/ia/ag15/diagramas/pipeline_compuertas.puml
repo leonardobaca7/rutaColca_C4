@@ -1,0 +1,51 @@
+@startuml pipeline_compuertas
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam roundcorner 8
+skinparam shadowing false
+skinparam state {
+    BackgroundColor #F8F9FA
+    BorderColor #800000
+    ArrowColor #800000
+}
+
+title Pipeline de Compuertas de Calidad para Desarrollo Asistido por IA (7/7)
+
+[*] --> CodigoPropuesto : Pull Request abierto por Desarrollador / IA
+
+state CodigoPropuesto as "Código en Rama del PR\n(rutacolca/reembolso.py)" #E3F2FD
+
+state "Ejecución de Compuertas de Calidad (calidad/verificar.py)" as Pipeline #FFF3E0 {
+    state "1. Pruebas de la Spec\n(pytest tests/ - 15/15 aprobadas)" as Gate1 #C8E6C9
+    state "2. Cobertura de Código\n(pytest-cov >= 90 %)" as Gate2 #C8E6C9
+    state "3. Estilo y Errores\n(ruff check E,F,B,S - sin avisos)" as Gate3 #C8E6C9
+    state "4. Seguridad Estática\n(bandit - sin hallazgos medios/altos)" as Gate4 #C8E6C9
+    state "5. Complejidad Ciclomática\n(radon cc <= 10)" as Gate5 #C8E6C9
+    state "6. Dependencias Aprobadas\n(AST check vs dependencias_aprobadas.txt)" as Gate6 #C8E6C9
+    state "7. Regla de la Política\n(Uso de politica.LIMITE_AGENTE sin hardcoding)" as Gate7 #C8E6C9
+
+    Gate1 --> Gate2
+    Gate2 --> Gate3
+    Gate3 --> Gate4
+    Gate4 --> Gate5
+    Gate5 --> Gate6
+    Gate6 --> Gate7
+}
+
+CodigoPropuesto --> Pipeline : Disparado por GitHub Actions (.github/workflows/calidad.yml)
+
+state EvaluacionFinal <<choice>>
+
+Pipeline --> EvaluacionFinal : Resultado 7/7
+
+state "Revisión Humana Aprobada\n(Merge a main)" as Aprobado #E8F5E9
+state "Rechazo de PR y Devolución\n(Request Changes / Feedback a IA)" as Rechazado #FFEBEE
+
+EvaluacionFinal --> Aprobado : 7/7 Compuertas PASA + Revisión Humana OK
+EvaluacionFinal --> Rechazado : Cualquier compuerta FALLA o Defecto Semántico
+
+Aprobado --> [*]
+Rechazado --> CodigoPropuesto : Ciclo de Refactorización
+
+@enduml
