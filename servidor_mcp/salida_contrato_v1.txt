@@ -1,0 +1,11 @@
+﻿FALLA C1 cada herramienta tiene una descripción de 30 a 400 caracteres — consultar_reserva, buscar
+FALLA C2 las herramientas de lectura están anotadas como solo lectura — consultar_reserva
+FALLA C3 las herramientas de escritura declaran readOnlyHint=false y destructiveHint — buscar, crear_ticket, ejecutar_sql
+FALLA C4 los parámetros de valores cerrados (severidad, componente, servicio) usan enum — crear_ticket.severidad, crear_ticket.componente
+FALLA C5 no expone herramientas prohibidas por la política del AG-13 — ejecutar_sql
+PASA  C6 consultar_reserva devuelve un resultado estructurado
+FALLA C7 un código mal formado devuelve isError con el formato esperado
+FALLA C8 publica al menos 2 recursos y 1 prompt — 0 recursos, 0 prompts
+PASA  C9 el catálogo de herramientas cuesta ≤ 1000 tokens (≈ 380)
+
+Resultado: 2/9 chequeos · 4 herramientas · catálogo ≈ 380 tokens
